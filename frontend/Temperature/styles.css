@@ -1,0 +1,630 @@
+/* =====================
+   GLOBAL
+===================== */
+:root {
+  --bg-main: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --accent-green: #22c55e;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-dark: #0f172a;
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.12);
+  --shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+  --map-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='5.5' fill='none' stroke='%230f172a' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='%230f172a'/%3E%3C/svg%3E") 12 12, crosshair;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, 'Inter', sans-serif;
+  background: #f1f5f9;   /* light grey */
+  margin: 0;
+  color: #0f172a;
+  min-height: 100vh;
+  overflow-y: hidden;
+}
+
+body[data-sync-page="temperature"] .top-header {
+  padding: 8px 24px;
+}
+
+body[data-sync-page="temperature"] .brand-logo {
+  height: 28px;
+}
+
+body[data-sync-page="temperature"] .brand-title {
+  font-size: 1rem;
+}
+
+body[data-sync-page="temperature"] .main-nav {
+  padding: 0 18px;
+  flex-wrap: nowrap;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+}
+
+body[data-sync-page="temperature"] .nav-btn {
+  padding: 12px 12px;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+}
+
+body[data-sync-page="temperature"] .nav-wip-badge {
+  padding: 1px 5px;
+  font-size: 0.56rem;
+}
+
+body[data-sync-page="temperature"] .nav-export {
+  margin-left: auto;
+}
+
+body[data-sync-page="temperature"] .btn-export {
+  margin: 5px 0;
+  padding: 10px 12px;
+}
+
+body[data-sync-page="temperature"] .sync-card-host {
+  align-items: center;
+  gap: 12px;
+}
+
+body[data-sync-page="temperature"] .sync-card {
+  min-width: 150px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  gap: 1px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+body[data-sync-page="temperature"] .sync-label {
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+}
+
+body[data-sync-page="temperature"] .sync-value {
+  font-size: 0.86rem;
+}
+
+body[data-sync-page="temperature"] .sync-subvalue {
+  font-size: 1.28rem;
+}
+
+/* =====================
+   HEADER (CONSISTENT)
+===================== */
+header {
+  background: white;
+  color: #0f172a;
+  padding: 6px 18px;
+  margin-top: 0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+header p {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #475569;
+}
+
+
+.dashboard-strip {
+  display: grid;
+  grid-template-columns: minmax(360px, 720px) auto;
+  align-items: stretch;
+  gap: 10px;
+  padding: 5px 14px 3px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  max-width: none;
+}
+
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 7px 12px;
+  text-align: center;
+  box-shadow: var(--shadow-light);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-soft);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card span {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.req h2 { color: var(--accent-green); }
+.tol h2 { color: var(--accent-orange); }
+.out h2 { color: var(--accent-red); }
+
+.filter-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid rgba(226, 232, 240, 0.75);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  background: #e5e7eb;
+  color: #020617;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-light);
+}
+
+.success {
+  background: #ffffff;
+  border-color: rgba(34, 197, 94, 0.22);
+  color: #0f172a;
+}
+.warning { background: var(--accent-orange); color: white; }
+.danger  {
+  background: #ffffff;
+  border-color: rgba(239, 68, 68, 0.22);
+  color: #0f172a;
+}
+
+.btn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.32);
+}
+
+.btn-dot.req {
+  background: var(--accent-green);
+}
+
+.btn-dot.out {
+  background: var(--accent-red);
+}
+
+/* =====================
+   LEGEND
+===================== */
+/* =====================
+   FLOORPLAN
+===================== */
+.floorplan-wrapper {
+  margin: 0 10px 6px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  height: calc(100vh - 200px);
+  min-height: 0;
+}
+
+#floorplan-container {
+  width: 100%;
+  height: 100%;
+  cursor: var(--map-cursor);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.temperature-map-stage {
+  --temp-pan-x: 0px;
+  --temp-pan-y: 0px;
+  --temp-drag-scale: 1;
+  position: relative;
+  width: min(100%, 2800px, calc((100vh - 200px) * 1.777777));
+  max-width: none;
+  border-radius: 4px;
+  background: #f8fafc;
+  overflow: hidden;
+  transform: translate(calc(-1% + var(--temp-pan-x)), calc(4% + var(--temp-pan-y))) scale(calc(2.72 * var(--temp-drag-scale)));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.temperature-floorplan-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: grayscale(1) saturate(0) brightness(1.06) contrast(0.94);
+  opacity: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+#temperature-room-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* =====================
+   ROOMS
+===================== */
+.room {
+  fill: rgba(148, 163, 184, 0.08);
+  stroke: rgba(100, 116, 139, 0.2);
+  stroke-width: 0.18;
+  vector-effect: non-scaling-stroke;
+  pointer-events: all;
+  cursor: var(--map-cursor);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: fill 0.25s ease, fill-opacity 0.25s ease, stroke 0.25s ease;
+}
+
+.room:hover {
+  cursor: var(--map-cursor);
+}
+
+.room:focus,
+.room:active,
+.room:focus-visible {
+  outline: none;
+}
+
+.temperature-tooltip {
+  position: fixed;
+  z-index: 4000;
+  display: none;
+  width: min(350px, calc(100vw - 24px));
+  max-height: min(650px, calc(100vh - 28px));
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+  pointer-events: none;
+}
+
+.temperature-tooltip.open {
+  display: block;
+}
+
+.temperature-tooltip.wide {
+  width: min(820px, calc(100vw - 24px));
+}
+
+.tooltip-heading {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.tooltip-heading span {
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tooltip-heading strong {
+  color: #ffffff;
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.tooltip-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.tooltip-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.tooltip-status.ok {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.tooltip-status.critical {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+}
+
+.tooltip-status.no-data {
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+}
+
+.tooltip-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.tooltip-grid span,
+.tooltip-muted {
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.tooltip-grid b {
+  color: #ffffff;
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.tooltip-units {
+  display: grid;
+  gap: 6px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.tooltip-units.many {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.tooltip-section-title {
+  grid-column: 1 / -1;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tooltip-unit {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tooltip-unit.critical {
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.tooltip-unit-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tooltip-unit-head span {
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.tooltip-unit-head b {
+  flex: 0 0 auto;
+  color: #86efac;
+  font-size: 0.58rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.tooltip-unit.critical .tooltip-unit-head b {
+  color: #fca5a5;
+}
+
+.tooltip-units.medium .tooltip-unit-head,
+.tooltip-units.many .tooltip-unit-head {
+  display: grid;
+  gap: 4px;
+}
+
+.tooltip-units.medium .tooltip-unit-head b,
+.tooltip-units.many .tooltip-unit-head b {
+  justify-self: start;
+}
+
+.tooltip-unit-grid {
+  display: grid;
+  grid-template-columns: minmax(56px, auto) minmax(0, 1fr);
+  gap: 5px 10px;
+}
+
+.tooltip-units.medium .tooltip-unit-grid,
+.tooltip-units.many .tooltip-unit-grid {
+  grid-template-columns: minmax(44px, auto) minmax(0, 1fr);
+}
+
+.tooltip-unit-grid span,
+.tooltip-unit-grid b {
+  min-width: 0;
+  font-size: 0.62rem;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+.tooltip-units.many .tooltip-unit {
+  padding: 6px;
+}
+
+.tooltip-units.many .tooltip-unit-head span {
+  font-size: 0.62rem;
+}
+
+.tooltip-units.many .tooltip-unit-head b {
+  font-size: 0.52rem;
+}
+
+.tooltip-units.many .tooltip-unit-grid span,
+.tooltip-units.many .tooltip-unit-grid b {
+  font-size: 0.58rem;
+}
+
+.tooltip-unit-grid span {
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.tooltip-unit-grid b {
+  color: #ffffff;
+  font-weight: 900;
+  text-align: right;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 900px) {
+  body {
+    overflow-y: auto;
+  }
+
+  body[data-sync-page="temperature"] .top-header {
+    padding: 8px 16px;
+  }
+
+  body[data-sync-page="temperature"] .main-nav {
+    padding: 0 10px;
+    flex-wrap: wrap;
+  }
+
+  body[data-sync-page="temperature"] .nav-btn {
+    padding: 10px 9px;
+    font-size: 0.64rem;
+  }
+
+  header {
+    padding: 10px 16px;
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+  }
+
+  .dashboard-strip {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px 12px 5px;
+  }
+
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+  }
+
+  .filter-panel {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .controls {
+    padding: 0;
+  }
+
+  .floorplan-wrapper {
+    margin: 2px 8px 10px;
+    height: 60vh;
+    min-height: 300px;
+  }
+
+  .temperature-map-stage {
+    width: min(100%, 1800px, calc(60vh * 1.777777));
+    transform: translate(calc(-1% + var(--temp-pan-x)), calc(4% + var(--temp-pan-y))) scale(calc(2.2 * var(--temp-drag-scale)));
+  }
+}
+
+/* =========================
+   TOP RIGHT HISTORY BUTTON
+========================= */
+
+.top-actions {
+  position: sticky;
+  top: 64px; /* adjust if navbar height changes */
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 24px;
+  z-index: 20;
+}
+
+.history-btn {
+  background: #6366f1;
+  color: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+}
+
+.history-btn:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99,102,241,0.35);
+}
+

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <title>Cold Room Monitoring Dashboard</title>
+
+  <!-- Navbar styles (shared) -->
+  <link rel="stylesheet" href="/shared/navbar.css">
+
+  <!-- Temperature styles -->
+  <link rel="stylesheet" href="/Temperature/styles.css?v=ppt-temp-map-20260521-no-data-hatch">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body data-sync-page="temperature">
+
+  <div id="navbar"></div>
+
+  <script src="/shared/navbar.js"></script>
+  <script>
+    fetch('/shared/navbar.html')
+      .then(res => {
+        if (!res.ok) throw new Error('Navbar failed to load');
+        return res.text();
+      })
+      .then(html => {
+        document.getElementById('navbar').innerHTML = html;
+      })
+      .catch(err => console.error(err));
+  </script>
+
+  <!-- =========================
+       PAGE CONTENT
+  ========================== -->
+  <header>
+    <h1>Temperature Monitoring Dashboard</h1>
+  </header>
+
+  <section class="dashboard-strip">
+    <div class="summary">
+      <div class="card req">
+        <h2 id="count-req">0</h2>
+        <span>Within Requirements</span>
+      </div>
+      <div class="card out">
+        <h2 id="count-out">0</h2>
+        <span>Out of Tolerance</span>
+      </div>
+    </div>
+
+    <div class="filter-panel">
+      <div class="controls">
+        <button onclick="filterRooms('all')" class="btn">Show All</button>
+        <button onclick="filterRooms('req')" class="btn success">
+          <span class="btn-dot req"></span>
+          Within Requirements
+        </button>
+        <button onclick="filterRooms('out')" class="btn danger">
+          <span class="btn-dot out"></span>
+          Out of Tolerance
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="floorplan-wrapper">
+    <div id="floorplan-container"></div>
+  </section>
+
+  <div id="temperature-tooltip" class="temperature-tooltip" role="status" aria-live="polite"></div>
+
+  <!-- Temperature logic -->
+  <script src="/Temperature/app.js?v=ppt-temp-map-20260521-no-data-hatch" defer></script>
+
+</body>
+</html>

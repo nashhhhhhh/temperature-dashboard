@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Temperature Diagnostics Dashboard</title>
+
+  <link rel="stylesheet" href="/Temperature/history/style.css">
+  <link rel="stylesheet" href="/shared/navbar.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body data-sync-page="temperature_history">
+
+  <div id="navbar"></div>
+
+  <script src="/shared/navbar.js"></script>
+  <script>
+    fetch('/shared/navbar.html')
+      .then(res => res.text())
+      .then(html => document.getElementById('navbar').innerHTML = html);
+  </script>
+
+  <header>
+    <h1>Temperature Diagnostics Dashboard</h1>
+    <p>Historical Performance • Compliance • Cooling Analytics</p>
+  </header>
+
+  <!-- KPI ROW -->
+  <section class="kpi-row">
+    <div class="kpi-card">
+      <h3>Compliance</h3>
+      <span id="kpi-compliance">--%</span>
+    </div>
+    <div class="kpi-card">
+      <h3>Critical Rooms</h3>
+      <span id="kpi-critical">--</span>
+    </div>
+    <div class="kpi-card">
+      <h3>Cooling Effectiveness</h3>
+      <span id="kpi-cooling">--%</span>
+    </div>
+    <div class="kpi-card">
+      <h3>Coil Stress Index</h3>
+      <span id="kpi-coil">--</span>
+    </div>
+    <div class="kpi-card">
+      <h3>Worst Room</h3>
+      <span id="kpi-worst">--</span>
+    </div>
+  </section>
+
+  <!-- CHART GRID -->
+  <section class="chart-grid">
+    <div class="chart-card">
+      <h3>Room Temperature vs Setpoint</h3>
+      <canvas id="chart-room"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Coil Temperature vs Setpoint</h3>
+      <canvas id="chart-coil"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Compliance Trend</h3>
+      <canvas id="chart-compliance"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <h3>Cooling Effectiveness Trend</h3>
+      <canvas id="chart-cooling"></canvas>
+    </div>
+  </section>
+
+  <!-- DIAGNOSTICS TABLE -->
+  <section class="table-wrapper">
+    <h2>Room Diagnostics Summary</h2>
+    <table id="diagnostics-table">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Mean Air Δ</th>
+          <th>Compliance %</th>
+          <th>Mean Coil Δ</th>
+          <th>Cooling Score</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <script src="/Temperature/history/app.js"></script>
+
+</body>
+</html>
