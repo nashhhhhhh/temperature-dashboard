@@ -163,7 +163,8 @@ header p {
 .filter-panel {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 10px;
   min-width: 0;
   padding: 6px 10px;
   border: 1px solid rgba(226, 232, 240, 0.75);
@@ -197,6 +198,28 @@ header p {
 .btn:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-light);
+}
+
+.requirements-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.requirements-link {
+  text-decoration: none;
+}
+
+.requirements-status {
+  max-width: 150px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .success {
@@ -267,6 +290,18 @@ header p {
   transform: translate(calc(-1% + var(--temp-pan-x)), calc(4% + var(--temp-pan-y))) scale(calc(2.72 * var(--temp-drag-scale)));
   transform-origin: center center;
   will-change: transform;
+}
+
+@media (max-width: 1080px) {
+  .dashboard-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-panel,
+  .requirements-controls {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 
 .temperature-floorplan-image {

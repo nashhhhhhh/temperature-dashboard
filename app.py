@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import os
+import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, jsonify, redirect, send_from_directory
+from flask import Flask, jsonify, redirect, request, send_file, send_from_directory
+from openpyxl import load_workbook
+from werkzeug.utils import secure_filename
 
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 DB_PATH = BASE_DIR / "temps.db"
+REQUIREMENTS_PATH = BASE_DIR / "temperature_requirements.xlsx"
 
 app = Flask(__name__, static_folder=None)
 
@@ -32,10 +36,102 @@ def classify_temperature(actual_temp, requirement, tolerance=2.0):
     return "CRITICAL" if actual - required >= tolerance else "OK"
 
 
-def db_last_synced():
-    if not DB_PATH.exists():
+def normalize_lookup_key(value):
+    if value is None:
         return None
-    return datetime.fromtimestamp(DB_PATH.stat().st_mtime, tz=timezone.utc).isoformat()
+    text = str(value).strip().upper()
+    text = re.sub(r"[^A-Z0-9/:-]", "", text)
+    return text or None
+
+
+def normalize_header(value):
+    return re.sub(r"[^a-z0-9]", "", str(value or "").strip().lower())
+
+
+def find_requirement_column(headers):
+    aliases = {
+        "requirement",
+        "required",
+        "requiredtemp",
+        "requiredtemperature",
+        "setpoint",
+        "setpointtemp",
+        "target",
+        "targettemp",
+    }
+    for index, header in enumerate(headers):
+        if normalize_header(header) in aliases:
+            return index
+    return None
+
+
+def find_code_columns(headers):
+    aliases = {"unitcode", "sourcecode", "baseroom", "roomcode", "room", "roomid"}
+    return [index for index, header in enumerate(headers) if normalize_header(header) in aliases]
+
+
+def read_requirements_workbook(source):
+    workbook = load_workbook(source, data_only=True, read_only=True)
+    sheet = workbook.active
+    rows = list(sheet.iter_rows(values_only=True))
+    if not rows:
+        return {}, 0
+
+    headers = [str(value or "").strip() for value in rows[0]]
+    requirement_index = find_requirement_column(headers)
+    code_indexes = find_code_columns(headers)
+    if requirement_index is None:
+        raise ValueError("Excel file needs a Requirement, Setpoint, or Target column")
+    if not code_indexes:
+        raise ValueError("Excel file needs a Unit Code, Source Code, Base Room, or Room Code column")
+
+    requirements = {}
+    row_count = 0
+    for row in rows[1:]:
+        if requirement_index >= len(row):
+            continue
+        requirement = as_float(row[requirement_index])
+        if requirement is None:
+            continue
+
+        matched = False
+        for index in code_indexes:
+            key = normalize_lookup_key(row[index] if index < len(row) else None)
+            if key:
+                requirements[key] = requirement
+                matched = True
+        if matched:
+            row_count += 1
+
+    return requirements, row_count
+
+
+def load_temperature_requirements():
+    if not REQUIREMENTS_PATH.exists():
+        return {}
+
+    try:
+        requirements, _ = read_requirements_workbook(REQUIREMENTS_PATH)
+        return requirements
+    except Exception as exc:
+        print(f"Temperature requirements workbook error: {exc}")
+        return {}
+
+
+def get_temperature_requirement(room, requirements):
+    for field in ("unit_code", "source_code", "base_room"):
+        key = normalize_lookup_key(room.get(field))
+        if key and key in requirements:
+            return requirements[key]
+    return as_float(room.get("Requirement"))
+
+
+def db_last_synced():
+    timestamps = []
+    for path in (DB_PATH, REQUIREMENTS_PATH):
+        if path.exists():
+            timestamps.append(datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat())
+    return max(timestamps, default=None)
 
 
 @app.after_request
@@ -93,12 +189,13 @@ def temperature_rooms():
         print(f"Temperature DB error: {exc}")
         return jsonify([])
 
+    requirements = load_temperature_requirements()
     room_groups = {}
     for row in rows:
         room = dict(row)
         actual = as_float(room.get("Actual Temp"))
-        required = as_float(room.get("Requirement"))
-        diff = as_float(room.get("temp_diff"))
+        required = get_temperature_requirement(room, requirements)
+        diff = None if actual is None or required is None else actual - required
         status = classify_temperature(actual, required)
         max_normal = required + 2 if required is not None else None
         expected_range = {
@@ -146,6 +243,41 @@ def temperature_rooms():
             grouped["expected_range"] = expected_range
 
     return jsonify(list(room_groups.values()))
+
+
+@app.route("/api/temperature/requirements", methods=["GET", "POST"])
+def temperature_requirements_file():
+    if request.method == "GET":
+        if not REQUIREMENTS_PATH.exists():
+            return jsonify({"exists": False, "error": "Temperature requirements workbook missing"}), 404
+
+        return send_file(
+            REQUIREMENTS_PATH,
+            as_attachment=True,
+            download_name="temperature_requirements.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+    uploaded = request.files.get("file")
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "Upload an Excel requirements file"}), 400
+
+    filename = secure_filename(uploaded.filename)
+    if not filename.lower().endswith(".xlsx"):
+        return jsonify({"error": "Requirements file must be .xlsx"}), 400
+
+    try:
+        _, row_count = read_requirements_workbook(uploaded)
+        uploaded.seek(0)
+        uploaded.save(REQUIREMENTS_PATH)
+    except Exception as exc:
+        return jsonify({"error": f"Could not read requirements workbook: {exc}"}), 400
+
+    return jsonify({
+        "ok": True,
+        "file": "temperature_requirements.xlsx",
+        "rows": row_count,
+    })
 
 
 @app.route("/api/export/report")

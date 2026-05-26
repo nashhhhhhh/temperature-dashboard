@@ -11,6 +11,10 @@ let roomDataByCode = {};
 
 let latestData = [];
 
+const requirementsUploadInput = document.getElementById('requirements-upload');
+const requirementsUploadButton = document.getElementById('requirements-upload-btn');
+const requirementsStatus = document.getElementById('requirements-status');
+
 function toNumber(value, fallback = null) {
   const num = Number(value);
   return Number.isFinite(num) ? num : fallback;
@@ -487,4 +491,35 @@ function fitToWidth() {
   viewport.style.setProperty('--temp-pan-x', '0px');
   viewport.style.setProperty('--temp-pan-y', '0px');
   viewport.style.setProperty('--temp-drag-scale', '1');
+}
+
+if (requirementsUploadButton && requirementsUploadInput) {
+  requirementsUploadButton.addEventListener('click', () => requirementsUploadInput.click());
+  requirementsUploadInput.addEventListener('change', async () => {
+    const file = requirementsUploadInput.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    requirementsUploadButton.disabled = true;
+    if (requirementsStatus) requirementsStatus.textContent = 'Uploading...';
+
+    try {
+      const res = await fetch('/api/temperature/requirements', {
+        method: 'POST',
+        body: formData
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || `Upload failed: HTTP ${res.status}`);
+
+      if (requirementsStatus) requirementsStatus.textContent = `${payload.rows} rows loaded`;
+      await syncRoomData();
+    } catch (err) {
+      console.error('Requirements upload error:', err);
+      if (requirementsStatus) requirementsStatus.textContent = err.message || 'Upload failed';
+    } finally {
+      requirementsUploadButton.disabled = false;
+      requirementsUploadInput.value = '';
+    }
+  });
 }
